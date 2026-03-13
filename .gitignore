@@ -4,12 +4,17 @@ venv/
 env/
 
 # ── Datos pesados (no versionar — descargar desde Kaggle) ──────────────────
-data/raw/
-data/interim/
-data/processed/
+data/raw/*
+data/interim/*
+data/processed/*
+# Conservar la carpeta vacía para que el pipeline no falle al clonar
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
 
-# ── Encoders serializados ──────────────────────────────────────────────────
-encoders/
+# ── Encoders serializados (generados por NB-06, no son input del repo) ─────
+encoders/*
+!encoders/.gitkeep
 
 # ── Jupyter ────────────────────────────────────────────────────────────────
 .ipynb_checkpoints/
