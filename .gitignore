@@ -1,0 +1,29 @@
+# ── Entornos virtuales ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Datos pesados (no versionar — descargar desde Kaggle) ──────────────────
+data/raw/
+data/interim/
+data/processed/
+
+# ── Encoders serializados ──────────────────────────────────────────────────
+encoders/
+
+# ── Jupyter ────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# ── Sistema operativo ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
