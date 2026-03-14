@@ -19,6 +19,8 @@ encoders/*
 # ── Jupyter ────────────────────────────────────────────────────────────────
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
+# Notebooks ejecutados (con outputs embebidos — se regeneran con nbconvert)
+notebooks/*_output.ipynb
 
 # ── Python ─────────────────────────────────────────────────────────────────
 __pycache__/
@@ -27,6 +29,16 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+
+# ── Docs generados (producidos al ejecutar los notebooks) ──────────────────
+docs/*.csv
+docs/*.png
+# model_justification.md SÍ se versiona — es documentación manual
+!docs/model_justification.md
+
+# ── Scripts de depuración temporal ─────────────────────────────────────────
+scripts/inspect_nb.py
+scripts/__pycache__/
 
 # ── Sistema operativo ──────────────────────────────────────────────────────
 .DS_Store

@@ -2,7 +2,7 @@
 
 **Sistema de Recomendación de E-Commerce sobre el dataset público Retailrocket**
 
-> Estado del proyecto: **En desarrollo** · Fase actual: Feature Engineering completado · Próximo paso: Modelado
+> Estado del proyecto: **En desarrollo** · Fase actual: Modelado completado · Próximo paso: Deployment/API
 
 ---
 
@@ -38,8 +38,16 @@ nexus-recsys/
 │   ├── 03_funnel_analysis.ipynb
 │   ├── 04_merge_pipeline.ipynb
 │   ├── 05_synthetic_demographics.ipynb
-│   └── 06_feature_engineering.ipynb
-├── encoders/                   ← Scalers y encoders serializados (.pkl)
+│   ├── 06_feature_engineering.ipynb
+│   └── 07_modeling.ipynb           ← ★ NUEVO: Modelado completo
+├── docs/                           ← Documentación técnica del modelado
+│   ├── model_justification.md          ← Justificación del modelo final (versionado)
+│   ├── model_comparison_final.csv      ← Generado por NB07 (no versionado)
+│   ├── fig_dataset_stats.png           ← Generado por NB07 (no versionado)
+│   └── fig_model_comparison.png        ← Generado por NB07 (no versionado)
+├── scripts/                        ← Scripts de generación de notebooks
+│   └── generate_modeling_notebook.py   ← Fuente de verdad de NB07
+├── encoders/                   ← Scalers, encoders y modelo final (.pkl)
 ├── requirements.txt
 └── README.md
 ```
@@ -48,7 +56,7 @@ nexus-recsys/
 
 ## Pipeline de notebooks
 
-El pipeline está organizado en **6 notebooks numerados** que deben ejecutarse en orden secuencial. Cada notebook lee el checkpoint del anterior y produce el suyo propio.
+El pipeline está organizado en **7 notebooks numerados** que deben ejecutarse en orden secuencial. Cada notebook lee el checkpoint del anterior y produce el suyo propio.
 
 ### 01 · EDA de Eventos (`events.csv`)
 
@@ -119,6 +127,49 @@ Adicionalmente aplica LabelEncoding y One-Hot Encoding, normalización con `Stan
 
 ---
 
+### 07 · Modelado — Sistema de Recomendación Completo ★
+
+**Entrada:** `data/processed/` (5 artefactos)  
+**Salida:** `encoders/final_model.pkl`, `encoders/hybrid_model.pkl`, `encoders/lgb_model_opt.txt`, `docs/model_comparison_final.csv`, `docs/fig_model_comparison.png`
+
+> ⚠️ El notebook `07_modeling.ipynb` es **generado automáticamente** por `scripts/generate_modeling_notebook.py`.
+> Si necesitas modificar el pipeline de modelado, edita el script y regénera:
+> ```bash
+> python scripts/generate_modeling_notebook.py
+> ```
+
+Pipeline completo de modelado que implementa y compara **9 modelos** organizados en 4 familias:
+
+| Modelo | Tipo | Librería |
+|--------|------|---------|
+| Popularity Baseline | Regla heurística | pandas |
+| SVD (k=50) | Factorización de Matrices | scipy.sparse |
+| NMF (k=50) | Factorización No-Negativa | scikit-learn |
+| LightGBM LTR | Learning-to-Rank pointwise | lightgbm |
+| Item-CF (SVD emb.) | Item-Based CF por similitud coseno | scipy + sklearn |
+| Content-Based Filtering | Perfil de usuario por features de ítem | sklearn |
+| SVD Optimizado (Optuna) | SVD + confidence weighting | scipy + optuna |
+| LightGBM Optimizado (Optuna) | LTR con búsqueda de hiperparámetros | lightgbm + optuna |
+| **Híbrido SVD Opt + CBF ★** | α·SVD + (1-α)·CB, α calibrado en validación | — |
+
+**Métricas implementadas:** `Precision@K`, `Recall@K`, `NDCG@K`, `MAP@K`, `Coverage`, `Novelty` (K = 5, 10)
+
+**Modelo ganador:** Híbrido (α=0.5) — Coverage 10× superior al SVD puro (0.040 vs 0.004), Novelty más alta (16.69), y el único que mitiga cold-start de usuario mediante el componente CBF.
+
+**Estadísticas clave del dataset:**
+
+| Métrica | Valor |
+|---------|-------|
+| Usuarios únicos | 1 407 580 |
+| Ítems únicos | 235 061 |
+| Interacciones totales | 2 145 179 |
+| Sparsity | 99.9994 % |
+| Split temporal (cutoff) | 2015-08-22 |
+
+Ver justificación detallada en [`docs/model_justification.md`](docs/model_justification.md).
+
+---
+
 ## Mapa de checkpoints
 
 ```
@@ -152,6 +203,13 @@ data/processed/train_test_split_info.json
 encoders/scaler_user.pkl
 encoders/scaler_item.pkl
 encoders/label_encoders.pkl
+        │
+        ▼  (NB 07)  ★ Modelado
+encoders/final_model.pkl         ← Híbrido SVD Opt + CB (modelo ganador)
+encoders/hybrid_model.pkl        ← Artefacto del Híbrido (α, params, metrics)
+encoders/lgb_model_opt.txt       ← LightGBM (re-ranker opcional)
+docs/model_comparison_final.csv  ← Tabla comparativa de los 9 modelos
+docs/fig_model_comparison.png    ← Gráfico comparativo
 ```
 
 ---
@@ -171,8 +229,8 @@ source .venv/bin/activate        # Linux / macOS
 # 3. Instalar dependencias
 pip install -r requirements.txt
 
-# 4. Ejecutar los notebooks en orden
-# Desde la raíz del repositorio, abrir Jupyter y ejecutar 01 → 06
+# 4. Ejecutar los notebooks en orden (01 → 07)
+# Desde la raíz del repositorio, abrir Jupyter y ejecutar en secuencia
 jupyter notebook notebooks/
 ```
 
@@ -203,9 +261,7 @@ jupyter notebook notebooks/
 ✅ Merge pipeline            (NB 04)
 ✅ Datos demográficos        (NB 05)
 ✅ Feature engineering       (NB 06)
-⬜ Modelo baseline           (NB 07 — próximo)
-⬜ Modelo avanzado           (NB 08 — próximo)
-⬜ Evaluación y métricas     (NB 09 — próximo)
+✅ Modelado completo         (NB 07) ← 9 modelos (CF + CBF + Híbrido) + Optuna + comparativa
 ⬜ API / Deployment          (pendiente)
 ```
 
@@ -218,7 +274,10 @@ jupyter notebook notebooks/
 | `pandas` ≥ 2.0 | Manipulación y análisis de datos |
 | `numpy` ≥ 1.26 | Operaciones numéricas |
 | `matplotlib` / `seaborn` | Visualizaciones |
-| `scikit-learn` ≥ 1.4 | Encoders, scalers, splitting |
+| `scikit-learn` ≥ 1.4 | Encoders, scalers, splitting, NMF |
+| `scipy` | SVD truncada para factorización de matrices |
+| `lightgbm` | Modelo Learning-to-Rank |
+| `optuna` | Optimización bayesiana de hiperparámetros |
 | `pyarrow` ≥ 15.0 | Serialización Parquet |
 | `faker` | Generación de datos demográficos sintéticos |
-| `scipy` | Distribuciones estadísticas (truncnorm) |
+| `nbformat` / `nbconvert` | Validación y ejecución de notebooks |
