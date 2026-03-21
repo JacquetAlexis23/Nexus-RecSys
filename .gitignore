@@ -33,12 +33,36 @@ build/
 # ── Docs generados (producidos al ejecutar los notebooks) ──────────────────
 docs/*.csv
 docs/*.png
-# model_justification.md SÍ se versiona — es documentación manual
+# model_justification.md, ARTIFACTS.md y EXPLICACION_ORAL.md SÍ se versionan
 !docs/model_justification.md
+!docs/ARTIFACTS.md
+!docs/EXPLICACION_ORAL.md
+# Tabla comparativa final (curada manualmente, no generada) SÍ se versiona
+!docs/model_comparison_final.csv
 
 # ── Scripts de depuración temporal ─────────────────────────────────────────
 scripts/inspect_nb.py
+scripts/_nb*.py
 scripts/__pycache__/
+# Excepciones: scripts definitivos NB14v3 y NB15v2 (documentan resultado final)
+!scripts/_nb14v3_run.py
+!scripts/_nb15v2_ensemble.py
+
+# ── Scripts — artefactos generados pesados ────────────────────────────────
+# Matrices de scores (~2GB total, 18 archivos .npy)
+scripts/_score_cache/
+# Mapping generado (417K items)
+scripts/_cat_mapping.json
+# Modelos y checkpoints binarios serializados
+scripts/*.pkl
+scripts/*.pt
+# Logs de ejecución
+scripts/*_log.txt
+# Resultados intermedios JSON (supersedidos)
+scripts/_nb15_results.json
+# Excepciones: resultados finales champion (pequeños, informativos)
+!scripts/_nb14v3_results.json
+!scripts/_nb15v2_results.json
 
 # ── Sistema operativo ──────────────────────────────────────────────────────
 .DS_Store

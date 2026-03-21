@@ -1,0 +1,6 @@
+﻿notebook,model,ndcg10_test,delta_pct
+NB13-C,RP3+TD (baseline),0.02859,0.0
+NB14-E1,RP3+TD+IPS (gamma=0.1),0.028355,-0.82
+NB14-E4,Ensemble Spearman (NB14),0.04069,42.32
+NB15v2,Ensemble Optimizado (NB15v2),0.043103,50.76
+NB15v2,Ensemble Optimizado (NB15v2),0.043103,50.76
