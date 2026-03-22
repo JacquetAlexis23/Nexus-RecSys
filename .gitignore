@@ -1,0 +1,51 @@
+# NexusDataCo Recommendation System
+# .gitignore
+
+# ──────────────────────────────────────────────
+# Datos (no subir CSVs pesados a Git)
+# ──────────────────────────────────────────────
+data/raw/*.csv
+data/processed/*.csv
+*.csv
+
+# ──────────────────────────────────────────────
+# Entornos virtuales
+# ──────────────────────────────────────────────
+.venv/
+venv/
+env/
+.env/
+
+# ──────────────────────────────────────────────
+# Python
+# ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+
+# ──────────────────────────────────────────────
+# Modelos y artefactos grandes
+# ──────────────────────────────────────────────
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.pt
+
+# ──────────────────────────────────────────────
+# Sistema operativo
+# ──────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ──────────────────────────────────────────────
+# IDEs y editores
+# ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
