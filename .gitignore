@@ -68,3 +68,11 @@ scripts/_nb15_results.json
 .DS_Store
 Thumbs.db
 desktop.ini
+
+recommender-system/data/
+recommender-system/data/raw/
+recommender-system/data/interim/
+recommender-system/data/processed/
+
+recommender-system/models_saved/
+*.pkl
