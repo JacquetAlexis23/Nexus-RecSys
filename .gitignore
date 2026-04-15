@@ -3,6 +3,11 @@
 venv/
 env/
 
+# ── Variables de entorno (credenciales sensibles — NUNCA versionar) ────────
+.env
+.env.local
+.env.*.local
+
 # ── Datos pesados (no versionar — descargar desde Kaggle) ──────────────────
 data/raw/*
 data/interim/*
@@ -33,12 +38,19 @@ build/
 # ── Docs generados (producidos al ejecutar los notebooks) ──────────────────
 docs/*.csv
 docs/*.png
-# model_justification.md, ARTIFACTS.md y EXPLICACION_ORAL.md SÍ se versionan
+# model_justification.md, ARTIFACTS.md y docs técnicos SÍ se versionan
 !docs/model_justification.md
 !docs/ARTIFACTS.md
-!docs/EXPLICACION_ORAL.md
 # Tabla comparativa final (curada manualmente, no generada) SÍ se versiona
 !docs/model_comparison_final.csv
+# Documentación técnica versionada
+!docs/API_DOCS.md
+!docs/REPRODUCIBILITY.md
+!docs/TRADE_OFFS.md
+!docs/validation_plan.md
+# Documentos personales/internos — NO incluir en el repo público
+docs/EXPLICACION_ORAL.md
+docs/DEMO_GUIDE.md
 
 # ── Scripts de depuración temporal ─────────────────────────────────────────
 scripts/inspect_nb.py
@@ -60,9 +72,14 @@ scripts/*.pt
 scripts/*_log.txt
 # Resultados intermedios JSON (supersedidos)
 scripts/_nb15_results.json
+scripts/_nb16*.json
+scripts/_nb16d_optuna.db
 # Excepciones: resultados finales champion (pequeños, informativos)
 !scripts/_nb14v3_results.json
 !scripts/_nb15v2_results.json
+
+# ── Notebooks de análisis intermedio (no parte del pipeline oficial) ───────
+notebooks/08_nb16_analysis.ipynb
 
 # ── Sistema operativo ──────────────────────────────────────────────────────
 .DS_Store

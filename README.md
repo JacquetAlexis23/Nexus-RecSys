@@ -2,7 +2,8 @@
 
 **Sistema de Recomendación de E-Commerce sobre el dataset público RetailRocket**
 
-> Estado del proyecto: **Etapa 1 completada** · Pipeline: NB01–NB15 · **Champion: Ensemble Optimizado NDCG@10 = 0.04310 (+50.8% vs baseline)**
+> **Pipeline completo: NB01–NB15 · API REST (FastAPI) · Dashboard interactivo (Streamlit)**  
+> Champion: Mega-Ensemble NB15v2 · **NDCG@10 = 0.04310** (+50.8% vs baseline RP3+TD)
 
 ---
 
@@ -62,11 +63,24 @@ nexus-recsys/
 │   ├── _nb15v2_ensemble.py                  ← Champion script NB15v2 (greedy+Optuna)
 │   └── _nb15v2_results.json                 ← Champion: NDCG@10=0.04310
 ├── docs/
-│   ├── model_justification.md              ← Justificación técnica del modelo (v6.0)
-│   ├── EXPLICACION_ORAL.md                 ← Guía completa de presentación oral
-│   ├── model_comparison_final.csv          ← Tabla champion: NB13→NB14→NB15
-│   ├── ARTIFACTS.md                        ← Manifiesto de artefactos del repositorio
+│   ├── model_justification.md              ← Justificación técnica del modelo champion
+│   ├── TRADE_OFFS.md                       ← Decisiones de diseño y trade-offs
+│   ├── REPRODUCIBILITY.md                 ← Guía de reproducibilidad end-to-end
+│   ├── validation_plan.md                 ← Plan de validación y protocolo de evaluación
+│   ├── API_DOCS.md                        ← Documentación de la API REST
+│   ├── ARTIFACTS.md                       ← Manifiesto de artefactos del repositorio
+│   ├── model_comparison_final.csv         ← Tabla champion: NB13→NB14→NB15
 │   └── fig_*.png / model_comparison_*.csv ← Generados por notebooks (no versionados)
+├── api/
+│   ├── main.py                            ← API REST FastAPI (7 endpoints)
+│   └── README.md                          ← Documentación de uso de la API
+├── dashboard/
+│   ├── app.py                             ← Dashboard Streamlit (5 páginas)
+│   ├── catalog.py                         ← Gestión del catálogo de productos
+│   ├── llm_engine.py                      ← Motor LLM (Groq / NEXUS AI)
+│   ├── plot_config.py                     ← Configuración de gráficos
+│   ├── styles.py                          ← Estilos y CSS del dashboard
+│   └── README.md                          ← Documentación del dashboard
 ├── encoders/                   ← Modelos serializados (.pkl) — no versionados
 ├── requirements.txt
 └── README.md
@@ -426,7 +440,8 @@ jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeou
 ✅ Ensemble avanzado             (NB13) ← RP3+TD baseline: NDCG@10=0.02859
 ✅ Estrategias avanzadas         (NB14) ← Ensemble Spearman: NDCG@10=0.04069 (+42.3%)
 ✅ Champion NB15v2               (NB15) ← Ensemble Optimizado: NDCG@10=0.04310 (+50.8%) ★
-⬜ API / Deployment              (Etapa 2 — pendiente)
+✅ API REST                            ← FastAPI · 7 endpoints · Swagger UI
+✅ Dashboard interactivo               ← Streamlit · 5 páginas · NEXUS AI integrado
 ```
 
 ---
@@ -442,4 +457,32 @@ jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeou
 | Rendle et al. (2009). *BPR: Bayesian Personalized Ranking*. UAI 2009. | BPR-MF |
 | Kang & McAuley (2018). *Self-Attentive Sequential Recommendation*. ICDM 2018. | SASRec |
 
-Ver justificación técnica completa en [`docs/model_justification.md`](docs/model_justification.md)
+Ver justificación técnica completa en [docs/model_justification.md](docs/model_justification.md)
+
+---
+
+## API REST y Dashboard
+
+### Lanzar la API
+
+```bash
+# Desde la raíz del proyecto
+uvicorn api.main:app --reload --port 8000
+
+# Documentación interactiva Swagger UI:
+http://localhost:8000/docs
+```
+
+### Lanzar el Dashboard
+
+```bash
+# Configurar el LLM (opcional — NEXUS AI)
+cp .env.example .env
+# Editar .env y completar GROQ_API_KEY
+
+# Lanzar Streamlit
+streamlit run dashboard/app.py
+# Abre en http://localhost:8501
+```
+
+Ver documentación completa de la API en [docs/API_DOCS.md](docs/API_DOCS.md) y del dashboard en [dashboard/README.md](dashboard/README.md).

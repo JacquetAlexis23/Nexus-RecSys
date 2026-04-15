@@ -3,7 +3,7 @@
 **Proyecto:** Sistema de Recomendación E-Commerce  
 **Dataset:** RetailRocket E-Commerce (Kaggle)  
 **Fecha:** Marzo 2026  
-**Versión:** 6.0 (actualizado tras notebook 11 — Optimización Optuna + Ensemble)  
+**Versión:** 7.0 (actualizado tras notebook 15 — Mega-Ensemble NB15v2 · NDCG@10=0.0431)  
 
 ---
 
@@ -11,7 +11,7 @@
 
 Nexus RecSys implementa un sistema de recomendación de productos para e-commerce sobre el dataset público RetailRocket, que contiene ~2.75 millones de eventos de comportamiento de usuarios (vistas, carritos, compras) sobre un catálogo de ~235 K ítems.
 
-Se evaluaron **18 modelos** en cinco fases desde el notebook 07 (modelos base) hasta el notebook 11 (optimización y ensemble):
+Se evaluaron **21 modelos** en ocho fases desde el notebook 07 (modelos base) hasta el notebook 15 (Mega-Ensemble greedy + Optuna):
 
 | # | Modelo | Familia | Notebook | NDCG@10 |
 |---|--------|---------|---------|-------|
@@ -24,12 +24,16 @@ Se evaluaron **18 modelos** en cinco fases desde el notebook 07 (modelos base) h
 | 15 | SASRec-lite (Transformer seq, 50K users) | Deep Learning seq | 09 | 0.0005 |
 | 16 | Mult-VAE^PR (enc=[600,200], z=64, β_max=0.3) | VAE generativo | 10 | 0.0255 |
 | 17 | RP3beta opt (α=0.75, β=0.30, Optuna 50 trials) | Random Walk CF | 11 | 0.0258 |
-| **18** | **Ensemble RP3opt+EASE^R (w=0.95) ★ GANADOR** | **Ensemble CF** | **11** | **0.0260** |
+| 18 | Ensemble RP3opt+EASE^R (w=0.95/0.05) | Ensemble CF | 11 | 0.0260 |
+| 19 | RP3beta+TD (decay=0.01) — NB13 baseline | Random Walk CF+TD | 13 | 0.0286 |
+| 20 | Ensemble Spearman (RP3+TD+EASE^R+MB, 40 trials) | Ensemble diverso | 14 | 0.0407 |
+| **21** | **Mega-Ensemble NB15v2 (RP3+TD+EASE^R+MB, 100 trials) ★ GANADOR** | **Ensemble greedy** | **15** | **0.0431** |
 
-**Modelo seleccionado: Ensemble RP3opt+EASE^R (w_rp3=0.95, w_ease=0.05)**  
-**Justificación principal:** El ensemble combina RP3beta optimizado con EASE^R mediante normalización MinMax por usuario. Logra NDCG@10=0.0260, un **+1.0% sobre RP3beta original** (0.0258). La baja correlación de rankings entre ambos modelos (ρ_Spearman=0.137) confirma alta complementariedad. RP3beta optimizado con Optuna (α=0.75, β=0.30) no supera individualmente al original en test (+0.0% NDCG@10) pero el ensemble sí aporta ganancia, representando el mejor NDCG del proyecto. Este resultado está en línea con la literatura: EASE^R y RP3beta están consistentemente entre los mejores métodos CF para datasets de e-commerce implícito en papers como "Are We Really Making Much Progress?" (Dacrema et al., 2019).
+**Modelo seleccionado: Mega-Ensemble NB15v2 (rp3_mb_td + rp3_td + ease_500)**  
+**Pesos:** rp3_mb_td=0.9556, rp3_td=0.0231, ease_500=0.0213 (Optuna 100 trials, seed=42)  
+**Justificación principal:** El Mega-Ensemble NB15v2 logra NDCG@10=0.0431, un **+65.6% sobre el Ensemble NB11** (0.0260) y **+50.8% sobre RP3+TD baseline NB13** (0.02859). La clave es la diversidad de señales entre RP3+MB+TD (multi-comportamiento con decay temporal) y EASE^R (similitud densa item-item, ρ_Spearman ≈ 0.21 con los demás), combinado con una calibración precisa de pesos usando 100 trials de Optuna en lugar de 40. Este resultado está en línea con la literatura: la combinación de métodos complementarios (RP3beta + EASE^R) supera sistemáticamente a los métodos individuales en datasets de e-commerce implícito con sparsidad extrema.
 
-> **Nota v6:** NB11 realizó tres intervenciones quirúrgicas: (A) análisis de sensibilidad al protocolo de evaluación, (B) optimización bayesiana de RP3beta (Optuna 50 trials, α=0.75 β=0.30), y (C) ensemble RP3opt+EASE^R (w=0.95/0.05). La ganancia del ensemble sobre RP3beta original es de +1.0% NDCG@10, y la baja correlación Spearman (ρ=0.137) valida la complementariedad de los modelos. El protocolo de evaluación ≥1 sigue siendo el estándar del proyecto; con filtro ≥10 el NDCG alcanza 0.0546 (+112% vs todos), revelando que la performance limitada se debe principalmente a la extrema sparsidad del dataset.
+> **Nota v7:** NB13-NB15 exploraron cuatro "levers" adicionales para superar NDCG@10=0.0260: (1) Temporal Decay en RP3beta (NB13: +10.7% → 0.02859), (2) Ensemble Spearman con selección por diversidad de rankings (NB14: +42.3% → 0.04069), (3) Mega-Ensemble greedy con Optuna 100 trials (NB15v2: +50.8% → **0.04310**). Las estrategias IPS, Multi-Behavior individuales y LightGCN no superaron el baseline. NB12 exploró SASRec completo en usuarios warm (≥5 interacciones), encontrando que la métrica LOU-warm está saturada por popularity bias (NDCG≈0.948 desde epoch 1) y no es comparable con el protocolo general del proyecto. El Mega-Ensemble NB15v2 es el modelo final de producción.
 
 ---
 
@@ -392,9 +396,9 @@ NB11 realiza tres intervenciones para exprimir el máximo rendimiento de los mod
 
 ---
 
-## 6. Justificación del Modelo Final: Ensemble RP3opt+EASE^R
+## 6. Justificación del Modelo Final: Mega-Ensemble NB15v2
 
-El modelo ganador del proyecto es el **Ensemble RP3opt+EASE^R** (w_rp3=0.95, w_ease=0.05), resultado de la optimización bayesiana de RP3beta con Optuna (NB11) y su combinación con EASE^R mediante normalización MinMax. Logra NDCG@10=0.0260, un +1.0% sobre RP3beta original (0.0258). La base del ensemble sigue siendo **RP3beta** (Random Walk with Restarts, Paudel et al. 2017), cuya fortaleza justifica que domina el ensemble con 95% del peso.
+El modelo ganador del proyecto es el **Mega-Ensemble NB15v2** (rp3_mb_td=0.9556, rp3_td=0.0231, ease_500=0.0213), resultado de la selección greedy por diversidad Spearman (NB14) refinada con 100 trials de Optuna (NB15v2). Logra NDCG@10=**0.0431**, un **+65.6% sobre el Ensemble NB11** (0.0260) y **+50.8% sobre el baseline RP3+TD** (0.02859 NB13-C). La base del ensemble sigue siendo **RP3beta con Multi-Behavior y Temporal Decay** (RP3+MB+TD), cuya fortaleza justifica que domina el ensemble con 95.6% del peso.
 
 ### 6.1 Argumentos a favor de RP3beta
 
@@ -501,19 +505,28 @@ La principal ventaja de RP3beta es que la similitud item-item de segundo orden c
 | **Mult-VAE^PR** (Liang et al. 2018) | ✅ Implementado | 10 | NDCG@10=0.0255 (−1.2% vs RP3beta, +172.5% vs NB08) |
 | **Análisis de protocolo** (filtros ≥1 a ≥10) | ✅ Implementado | 11 | NDCG@10 de 0.0258 a 0.0546 según filtro |
 | **Optuna 50 trials RP3beta** (TPE, seed=42) | ✅ Implementado | 11 | α=0.75 β=0.30 → NDCG@10 val=0.01925 (test: −4.2% vs orig) |
-| **Ensemble RP3opt+EASE^R** (w=0.95/0.05) | ✅ Implementado | 11 | NDCG@10=0.0260 (+1.0% vs RP3beta orig) **← NUEVO GANADOR** |
+| **Ensemble RP3opt+EASE^R** (w=0.95/0.05) | ✅ Implementado | 11 | NDCG@10=0.0260 (+1.0% vs RP3beta orig) |
 | Two-tower Neural | ❌ Descartada | — | Sin soporte PyTorch/TF en Python 3.13 con wheel estable |
 | ALS con `implicit` | ❌ Descartada | — | Sin wheel para Python 3.13 |
+| **SASRec completo** (warm ≥5 interacciones) | ✅ Implementado | 12 | NDCG@10≈0.948 (LOU warm, saturado por popularity bias) |
+| **Temporal Decay RP3beta** (decay=0.01) | ✅ Implementado | 13 | NDCG@10=0.02859 (+10.7% vs NB11) |
+| **IPS** (γ=0.1) y **Multi-Behavior** (NB14) | ✅ Implementado | 14 | IPS: −0.8%; MB solo: −33.9% — ambos inferiores al baseline |
+| **LightGCN+TD** (emb=32, n_layers=1) | ⚠️ Descartado (CPU) | 14 | 835.7s/epoch, ~11.6h para 50 epochs — impracticable sin GPU |
+| **Ensemble Spearman** (RP3+TD+EASE+MB, 40 trials) | ✅ Implementado | 14 | NDCG@10=0.04069 (+42.3% vs NB13-C) |
+| **Mega-Ensemble NB15v2** (100 trials Optuna) | ✅ Implementado | 15 | NDCG@10=**0.04310** (+50.8% vs RP3+TD) **← GANADOR FINAL** |
+| EASE^R Multi-Lambda (λ∈[50,3000]) | ✅ Evaluado | 15 | No aporta mejora incremental vs ease_500 en ensemble |
+| iALS (scipy, factors=32) | ✅ Evaluado | 15 | NDCG@10=0.01202 individual; perjudica ensemble (−2.9%) |
+| Category Fallback cold users | ✅ Evaluado | 15 | Sin mejora estadísticamente significativa |
 | FAISS para serving | ⏳ Pendiente | — | Requiere infraestructura de serving |
 
 ### 7.3 Próximos Pasos
 
 **A corto plazo (compatibles con Python 3.13):**
 1. ~~Optimización de hiperparámetros α y β de RP3beta con Optuna~~ ✅ Completado (NB11: α=0.75, β=0.30)
-2. Incorporar **Temporal Decay** en el historial antes de aplicar RP3beta → los ítems recientes tendrán mayor peso en sc_u
-3. ~~Ensemble selectivo: RP3beta + EASE^R combinados~~ ✅ Completado (NB11: w=0.95/0.05, NDCG=0.0260)
+2. ~~Incorporar **Temporal Decay** en el historial antes de aplicar RP3beta~~ ✅ Completado (NB13-C: decay=0.01, +10.7%)
+3. ~~Ensemble selectivo: RP3beta + EASE^R combinados~~ ✅ Completado (NB15v2: NDCG=0.0431, pesos 0.9556/0.0231/0.0213)
 4. Re-entrenamiento incremental: actualizar W_rp3 y B_ease con nuevas interacciones (pipeline batch diario)
-5. **Grid Search Mult-VAE^PR**: probar β_max={0.1, 0.2} y z={128, 256} — el annealing parcial y mayor capacidad latente podría cerrar el gap de 0.000310 NDCG con RP3beta
+5. ~~Grid Search Mult-VAE^PR~~ No prioritario — ensembles CF superan a VAE en este dataset
 
 **A largo plazo:**
 6. **Two-tower Neural:** Reemplazar RP3beta por embeddings neurales con GPU una vez disponible infraestructura

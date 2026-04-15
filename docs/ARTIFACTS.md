@@ -1,8 +1,8 @@
 # Nexus RecSys — Manifiesto de Artifacts
 
-**Versión:** 2.0 — Etapa 1 completa (NB01–NB15) | Champion: NDCG@10 = **0.04310** (+50.8% vs baseline)
+**Versión:** 3.0 — Proyecto completo (NB01–NB15 · API REST · Dashboard) | Champion: NDCG@10 = **0.04310** (+50.8% vs baseline)
 
-Este documento clasifica cada archivo del repositorio según su origen:
+Este documento clasifica cada archivo del repositorio según su origen:  
 **A** = creado/editado a mano (commitear en git) | **G** = generado por notebook/script (reproducible, en `.gitignore`)
 
 ---
@@ -12,15 +12,19 @@ Este documento clasifica cada archivo del repositorio según su origen:
 ### Raíz y configuración
 | Archivo | Descripción |
 |---|---|
-| `README.md` | Documentación principal del proyecto (pipeline completo NB01–NB15) |
+| `README.md` | Documentación principal del proyecto (pipeline completo NB01–NB15 + API + Dashboard) |
 | `requirements.txt` | Dependencias Python del entorno virtual |
 | `.gitignore` | Reglas de exclusión para Git |
+| `.env.example` | Plantilla pública de variables de entorno (sin credenciales) |
 
 ### docs/ — documentación técnica (versionada)
 | Archivo | Descripción |
 |---|---|
-| `docs/model_justification.md` | Justificación técnica del modelo final v6.0 (NB01–NB15, champion NB15v2) |
-| `docs/EXPLICACION_ORAL.md` | Guía completa de presentación oral (bloques, FAQ, datos clave) |
+| `docs/model_justification.md` | Justificación técnica del modelo final v7.0 (NB01–NB15, champion NB15v2) |
+| `docs/TRADE_OFFS.md` | Decisiones de diseño, trade-offs y alternativas consideradas |
+| `docs/REPRODUCIBILITY.md` | Guía de reproducibilidad end-to-end con comandos paso a paso |
+| `docs/validation_plan.md` | Plan de validación y protocolo de evaluación (split temporal, métricas) |
+| `docs/API_DOCS.md` | Documentación de la API REST (endpoints, schemas, ejemplos curl) |
 | `docs/ARTIFACTS.md` | Este manifiesto |
 | `docs/model_comparison_final.csv` | Tabla curada de progresión: RP3+TD → Ensemble NB14 → Champion NB15v2 |
 
@@ -36,10 +40,30 @@ Este documento clasifica cada archivo del repositorio según su origen:
 | `scripts/build_nb13.py` | A | Builder del notebook NB13 (ensemble avanzado) |
 | `scripts/multivae_model.py` | A | Implementación PyTorch de Mult-VAE^PR (Liang et al. WWW 2018) |
 | `scripts/sasrec_model.py` | A | Implementación SASRec (transformer secuencial, Wang et al. 2018) |
+| `scripts/build_product_catalog.py` | A | Genera `data/processed/product_catalog.json` con nombres de productos |
+| `scripts/validate_data.py` | A | Valida integridad y formato de los datos raw antes del pipeline |
+| `scripts/validate_artifacts.py` | A | Verifica que todos los artefactos requeridos existan antes de inferencia |
+| `scripts/run_pipeline.sh` | A | Script bash de ejecución secuencial completa NB01–NB15 |
 | `scripts/_nb14v3_run.py` | A | Pipeline NB14 avanzado: IPS, Multi-Behavior, LightGCN, Ensemble Spearman |
 | `scripts/_nb14v3_results.json` | A | Resultados NB14: NDCG@10=0.04069 (Ensemble Spearman) |
 | `scripts/_nb15v2_ensemble.py` | A | **Champion script NB15v2**: greedy selection + 100 Optuna trials |
 | `scripts/_nb15v2_results.json` | A | **Resultados champion**: NDCG@10=0.04310 (+50.8% vs baseline) |
+
+### api/ — API REST (FastAPI)
+| Archivo | Tipo | Descripción |
+|---|---|---|
+| `api/main.py` | A | API REST FastAPI: health check, recomendaciones, similares, cold-start |
+| `api/README.md` | A | Documentación de uso con ejemplos curl y descripción de endpoints |
+
+### dashboard/ — Dashboard interactivo (Streamlit)
+| Archivo | Tipo | Descripción |
+|---|---|---|
+| `dashboard/app.py` | A | Aplicación Streamlit principal (5 páginas) |
+| `dashboard/catalog.py` | A | Gestión del catálogo de productos y nombres de ítems |
+| `dashboard/llm_engine.py` | A | Motor de LLM: integración Groq (NEXUS AI) con fallback estático |
+| `dashboard/plot_config.py` | A | Configuración de gráficos Plotly (paleta, temas, helpers) |
+| `dashboard/styles.py` | A | CSS y estilos del dashboard |
+| `dashboard/README.md` | A | Documentación del dashboard (páginas, requisitos, modo sin datos) |
 
 ### notebooks/ — pipeline completo de análisis y modelado
 | Archivo | Descripción |
